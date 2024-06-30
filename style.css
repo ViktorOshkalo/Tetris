@@ -10,8 +10,31 @@ body{
     align-items: center;
 }
 
+.info{
+    display: grid;
+    justify-content: center;
+    align-items: center;
+}
+
+.info .score {
+    display: flex;
+    justify-content: center;
+    color: rgb(145, 17, 138);
+    font: italic small-caps bold 24px/2 cursive;
+}
+
+.info .gameover {
+    text-align: center;
+    color: rgb(190, 33, 33);
+    font: italic small-caps bold 32px/2 cursive;
+    visibility: hidden;
+} 
+
+.gameover{
+    display: block;
+}
+
 .tetris{
-    border: 5px solid rgb(236, 255, 206);
     display: grid;
     grid-template-columns: repeat(10, auto);
 }
@@ -21,8 +44,8 @@ body{
     width: min(4vh, 7vw);
     background: rgba(211, 211, 211, 0.4);
     box-shadow: 
-        inset 2px 2px 2px rgb(100, 202, 146),
-        inset -2px -2px 2px rgb(62, 62, 146)
+        inset 2px 2px 2px rgb(110, 145, 126),
+        inset -2px -2px 2px rgb(71, 71, 87)
     ;
 }
 
@@ -44,4 +67,12 @@ body{
 
 .tetris .Z{
     background: rgb(182, 0, 189);
+}
+
+.tetris .S{
+    background: rgb(20, 152, 161);
+}
+
+.tetris .J{
+    background: rgb(219, 188, 11);
 }
