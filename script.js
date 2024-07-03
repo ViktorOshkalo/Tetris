@@ -1,5 +1,14 @@
 const PLAYFIELD_COLUMNS = 10
 const PLAYFIELD_ROWS    = 20
+const pointsToChangeLevel = 1000
+const initLoopIntervalMs = 500
+
+let score = 0
+let isGameOver = false
+let playfield 
+let cells
+let pause = true
+let level = 1
 
 const TETROMINO_NAMES = [
     'O',
@@ -106,10 +115,10 @@ function drawPlayfield(){
             const cellIndex = convertPositionToIndex(row, column)
             const tetrominoName = playfield[row][column]
             if (!tetrominoName) {
-                playfieldElements[cellIndex].className = ''
+                cells[cellIndex].className = ''
                 continue
             }
-            playfieldElements[cellIndex].classList.add(tetrominoName)
+            cells[cellIndex].classList.add(tetrominoName)
         }
     }
 }
@@ -130,8 +139,18 @@ function drawScore() {
     document.getElementById("score").innerHTML = score
 }
 
+function drawLevel() {
+    document.getElementById("level").innerHTML = level
+}
+
 function drawGameOver() {
     document.getElementById("gameover").style.visibility = "visible"
+}
+
+function draw() {
+    drawScore()
+    drawTetromino()
+    drawPlayfield()
 }
 
 function eraseTetromino() {
@@ -150,11 +169,11 @@ function eraseFullRows(fullRows) {
     const newPlayfield = []
     for (let r = playfield.length-1; r >= 0; r--) {
         if (!fullRows.includes(r)) {
-            newPlayfield.unshift(playfield[r])
+            newPlayfield.unshift(playfield[r]) // add all non full rows to new playfield form bottom to top
         }
     }    
     for (let r = newPlayfield.length; r < playfield.length; r++){
-        newPlayfield.unshift(new Array(PLAYFIELD_ROWS).fill(0))    
+        newPlayfield.unshift(new Array(PLAYFIELD_COLUMNS).fill(0))    // fill up the rest with empty rows 
     }
     playfield = newPlayfield    
 }
@@ -178,39 +197,24 @@ function updateScore(rowsFiredCount){
 }
 
 // moving tetro
-function redrawTetromino(tetroModifier) {
-    const tetrominoNew = structuredClone(tetromino)
-    tetroModifier(tetrominoNew)
-    if (isCollision(tetrominoNew)) {
-        return
-    }
-    eraseTetromino()
-    tetromino = tetrominoNew
-    updatePlayfield()
-}
-
 function moveRight(tetro) {
     console.log("moving right")
-    if (tetro.col + getMatrixWidth(tetro.matrix) < PLAYFIELD_COLUMNS)
-        tetro.col += 1
+    tetro.col += 1
 }
 
 function moveLeft(tetro) {
     console.log("moving left")
-    if (tetro.col > 0)
-        tetro.col -= 1
+    tetro.col -= 1
 }
 
 function moveDown(tetro) {
     console.log("moving down")
-    if (tetro.row + getMatrixHeight(tetro.matrix) < PLAYFIELD_ROWS)
-        tetro.row += 1
+    tetro.row += 1
 }
 
 function moveUp(tetro) {
     console.log("moving up")
-    if (tetro.row > 0)
-        tetro.row -= 1
+    tetro.row -= 1
 }
 
 function roatate(tetro) {
@@ -237,19 +241,56 @@ function roatate(tetro) {
     tetro.matrix = matrixNew
 }
 
+function redrawTetromino(tetroModifierFunc) {
+    const tetrominoNew = structuredClone(tetromino)
+    tetroModifierFunc(tetrominoNew)
+    if (isCollision(tetrominoNew)) {
+        return
+    }
+    eraseTetromino()
+    tetromino = tetrominoNew
+    draw()
+}
+
+// setup event handling
+document.addEventListener("keydown", (event) => { 
+    if (isGameOver)
+        return
+    
+    switch (event.code) {
+        case "ArrowRight":
+            redrawTetromino(moveRight)
+            break
+        case "ArrowLeft":
+            redrawTetromino(moveLeft)
+            break
+        case "ArrowDown":
+            redrawTetromino(moveDown)
+            break
+        case "ArrowUp":
+            redrawTetromino(moveUp)
+            break    
+        case "Space":
+            redrawTetromino(roatate)
+            break   
+        case "Enter":
+            pause = !pause
+            break  
+    }
+})
+
 // collisions
-function isStuck() {
+function isTetrominoStuck() {
     if (!isTouchDown()) 
         return false
 
     if (!tetromino.touchdown){   
-        // allowing move tetromino when first check
         tetromino.touchdown = true
-        return false 
+        return false  // allowing move tetro till next iteration check
     }
 
-    // is stuck when second check
-    return true
+    console.log("tetromino stuck")
+    return true // report as stuck when next iteration check
 }
 
 function isTouchDown(){
@@ -269,13 +310,27 @@ function isTouchDown(){
 
             if (playfield[rowToCheck][colToCheck])
                 return true
-            else 
-                break
+            
+            break // go check next column
         }
     }
 }
 
 function isCollision(tetrominoNew) {
+    // out of borders
+    if (tetrominoNew.col + getMatrixWidth(tetrominoNew.matrix) > PLAYFIELD_COLUMNS)
+        return true
+
+    if (tetrominoNew.col < 0)
+        return true
+
+    if (tetrominoNew.row + getMatrixHeight(tetrominoNew.matrix) > PLAYFIELD_ROWS)
+        return true
+
+    if (tetrominoNew.row < getMatrixHeight(tetrominoNew.matrix) * -1)
+        return true
+ 
+    // intersections
     for (let r = 0; r < tetrominoNew.matrix.length; r++) {
         for (let c = 0; c < tetrominoNew.matrix[r].length; c++) {
             if (!tetrominoNew.matrix[r][c]) 
@@ -287,7 +342,7 @@ function isCollision(tetrominoNew) {
             if (row < 0)  
                 continue
 
-            if (isCellOfCurrentTetro(row, col))
+            if (isCellOfCurrentTetromino(row, col))
                 continue
             
             if (!playfield[row][col])
@@ -296,11 +351,12 @@ function isCollision(tetrominoNew) {
             return true
         }
     }
+
     return false
 }
 
 // helper functions
-function isCellOfCurrentTetro(row, column) {
+function isCellOfCurrentTetromino(row, column) {
     for (let r = 0; r < tetromino.matrix.length; r++) {
         for (let c = 0; c < tetromino.matrix[r].length; c++) {
             if (!tetromino.matrix[r][c])
@@ -327,83 +383,80 @@ function getFullRows() {
         if (isFull)
             fullRows.push(r)
     }
-    
     return fullRows
 }
 
-function updatePlayfield() {
-    drawScore()
-    drawTetromino()
-    drawPlayfield()
+function checkGameOver() {
+    if (tetromino.row >= 0) 
+        return false
+
+    console.log("game over")
+    return true
 }
 
-// ----------------------------------------------------------------
-
-// init game
-let score = 0
-let isGameOver = false
-
-let playfieldElements = generatePlayfieldElements() // html
-
-let playfield = new Array(PLAYFIELD_ROWS).fill()    // matrix
-    .map(() => new Array(PLAYFIELD_COLUMNS).fill(0))
-
-let tetromino = generateTetromino()
-updatePlayfield()
-
-// setup event handling
-document.addEventListener("keydown", (event) => { 
-    if (isGameOver)
-        return
-    
-    switch (event.code) {
-        case "ArrowRight":
-            redrawTetromino(moveRight)
-            break
-        case "ArrowLeft":
-            redrawTetromino(moveLeft)
-            break
-        case "ArrowDown":
-            redrawTetromino(moveDown)
-            break
-        case "ArrowUp":
-            redrawTetromino(moveUp)
-            break    
-        case "Space":
-            redrawTetromino(roatate)
-            break     
-    }
-})
-
-// setup game runner
-window.setInterval(gameRunner, 200)
-
-function gameRunner() {
-    if (isGameOver)
-        return
-
-    redrawTetromino(moveDown)
-    
-    if (!isStuck())
-        return
-    
-    console.log("stuck")
-      
-    if (tetromino.row < 0) {
-        console.log("game over")
-        isGameOver = true
-        drawGameOver()
-        return
-    }
-
+function checkFullRows(){
     const fullRows = getFullRows()
     if (fullRows){
         eraseFullRows(fullRows)
         updateScore(fullRows.length)
     }
+}
 
-    console.log("new tetromino")
+function checkGameSpeed() {
+    if (score / level < pointsToChangeLevel)
+        return
+
+    level += 1
+    drawLevel()
+}
+
+// ----------------------------------------------------------------
+
+// init game
+
+function init() {
+    playfield = new Array(PLAYFIELD_ROWS).fill()    // matrix
+        .map(() => new Array(PLAYFIELD_COLUMNS).fill(0))
+    cells = generatePlayfieldElements() // html
+    tetromino = generateTetromino()
+    draw()
+} 
+
+// loop running
+function startLoop() {
+    if (isGameOver)
+        return
+
+    setTimeout(() => requestAnimationFrame(executeLoop), Math.floor(initLoopIntervalMs / level))
+}
+
+function executeLoop() {
+    if (pause) {
+        startLoop()
+        return
+    }
+
+    redrawTetromino(moveDown)
+
+    if (!isTetrominoStuck()){
+        startLoop()
+        return
+    }
+    
+    if (checkGameOver()) {
+        isGameOver = true
+        drawGameOver()
+        return
+    }
+
+    checkFullRows()
+    checkGameSpeed()
 
     tetromino = generateTetromino()
-    updatePlayfield()
+    redrawTetromino(moveDown)
+    draw()
+    startLoop()
 }
+
+init()
+startLoop()

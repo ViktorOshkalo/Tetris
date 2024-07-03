@@ -3,7 +3,7 @@
 }
 
 body{
-    background: linear-gradient(90deg, black, yellow);
+    background: linear-gradient(180deg, rgb(129, 125, 74), rgb(42, 95, 116));
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,17 +16,24 @@ body{
     align-items: center;
 }
 
+.info .startPause {
+    display: flex;
+    justify-content: center;
+    color: rgb(255, 255, 255);
+    font: italic small-caps bold 24px/2 cursive;
+}
+
 .info .score {
     display: flex;
     justify-content: center;
-    color: rgb(145, 17, 138);
+    color: rgb(255, 255, 255);
     font: italic small-caps bold 24px/2 cursive;
 }
 
 .info .gameover {
     text-align: center;
-    color: rgb(190, 33, 33);
-    font: italic small-caps bold 32px/2 cursive;
+    color: rgb(163, 48, 48);
+    font: italic small-caps bold 36px/2 cursive;
     visibility: hidden;
 } 
 
@@ -42,37 +49,37 @@ body{
 .tetris div{
     height: min(4vh, 7vw);
     width: min(4vh, 7vw);
-    background: rgba(211, 211, 211, 0.4);
+    background: rgba(255, 255, 255, 0.514);
     box-shadow: 
-        inset 2px 2px 2px rgb(110, 145, 126),
-        inset -2px -2px 2px rgb(71, 71, 87)
+        inset 1px 1px 1px rgb(129, 127, 150),
+        inset -1px -1px 1px rgb(66, 63, 95)
     ;
 }
 
 .tetris .O{
-    background: rgb(209, 0, 0);
+    background: rgb(207, 0, 0, 0.5);
 }
 
 .tetris .I{
-    background: rgb(0, 177, 0);
+    background: rgba(2, 184, 26, 0.5);
 }
 
 .tetris .L{
-    background: rgb(0, 0, 206);
+    background: rgb(0, 0, 180, 0.5);
 }
 
 .tetris .T{
-    background: rgb(214, 86, 0);
+    background: rgba(204, 134, 5, 0.5);
 }
 
 .tetris .Z{
-    background: rgb(182, 0, 189);
+    background: rgb(167, 0, 92, 0.5);
 }
 
 .tetris .S{
-    background: rgb(20, 152, 161);
+    background: rgb(0, 89, 172, 0.5);
 }
 
 .tetris .J{
-    background: rgb(219, 188, 11);
+    background: rgba(99, 1, 165, 0.5);
 }
