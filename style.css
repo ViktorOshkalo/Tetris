@@ -10,24 +10,58 @@ body{
     align-items: center;
 }
 
-.info{
-    display: grid;
+.infotext{
+    display: flex;
+    justify-content: center;
+    color: rgb(255, 255, 255);
+    font: italic small-caps bold 24px/2 cursive;
+}
+
+.gameover{
+    display: flex;
+    justify-content: center;
+    color: rgb(129, 76, 76);
+    font: italic small-caps bold 28px/2 cursive;
+    visibility: hidden;
+}
+
+.progress{
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.info .startPause {
+.progress .score {
     display: flex;
     justify-content: center;
     color: rgb(255, 255, 255);
     font: italic small-caps bold 24px/2 cursive;
+    align-self: left;
 }
 
-.info .score {
+.progress .level {
     display: flex;
     justify-content: center;
     color: rgb(255, 255, 255);
     font: italic small-caps bold 24px/2 cursive;
+    align-self: right;
+    margin-left: auto;
+}
+
+.nextTetro{
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    margin-left: auto;
+}
+
+.nextTetro div{
+    height: min(1vh, 2vw);
+    width: min(1vh, 2vw);
+    background: rgba(255, 255, 255, 0.514);
+    box-shadow: 
+        inset 1px 1px 1px rgb(129, 127, 150),
+        inset -1px -1px 1px rgb(66, 63, 95)
+    ;
 }
 
 .info .gameover {
@@ -36,10 +70,6 @@ body{
     font: italic small-caps bold 36px/2 cursive;
     visibility: hidden;
 } 
-
-.gameover{
-    display: block;
-}
 
 .tetris{
     display: grid;
@@ -56,30 +86,32 @@ body{
     ;
 }
 
-.tetris .O{
+.tetris .O, .nextTetro .O{
     background: rgb(207, 0, 0, 0.5);
 }
 
-.tetris .I{
+.tetris .I, .nextTetro .I{
     background: rgba(2, 184, 26, 0.5);
 }
 
-.tetris .L{
+.tetris .L, .nextTetro .L{
     background: rgb(0, 0, 180, 0.5);
 }
 
-.tetris .T{
+.tetris .T, .nextTetro .T{
     background: rgba(204, 134, 5, 0.5);
 }
 
-.tetris .Z{
+.tetris .Z, .nextTetro .Z{
     background: rgb(167, 0, 92, 0.5);
 }
 
-.tetris .S{
+.tetris .S, .nextTetro .S{
     background: rgb(0, 89, 172, 0.5);
 }
 
-.tetris .J{
+.tetris .J, .nextTetro .J{
     background: rgba(99, 1, 165, 0.5);
 }
+
+

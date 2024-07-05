@@ -1,14 +1,20 @@
 const PLAYFIELD_COLUMNS = 10
 const PLAYFIELD_ROWS    = 20
+const PREVEIW_COLUMNS = 4
+const PREVEIW_ROWS = 4
+
 const pointsToChangeLevel = 1000
 const initLoopIntervalMs = 500
 
-let score = 0
-let isGameOver = false
+let tetromino
+let tetrominoNext
 let playfield 
 let cells
-let pause = true
+let cellsPreview
+let isPause = true
 let level = 1
+let score = 0
+let isGameOver = false
 
 const TETROMINO_NAMES = [
     'O',
@@ -82,6 +88,14 @@ function generatePlayfieldElements(){
     return document.querySelectorAll('.tetris div')
 }
 
+function generatePreviewElements(){
+    for(let i = 0; i < PREVEIW_COLUMNS * PREVEIW_ROWS; i++){
+        const div = document.createElement('div')
+        document.querySelector('.nextTetro').append(div)
+    }
+    return document.querySelectorAll('.nextTetro div')
+}
+
 function getRandomTetrominoName() {
     const num = Math.floor(Math.random() * TETROMINO_NAMES.length)
     return TETROMINO_NAMES[num]
@@ -106,6 +120,10 @@ function generateTetromino() {
 
 function convertPositionToIndex(row, col){
     return row * PLAYFIELD_COLUMNS + col
+}
+
+function convertPositionToIndexPreview(row, col){
+    return row * PREVEIW_COLUMNS + col
 }
 
 // drawing
@@ -135,6 +153,28 @@ function drawTetromino() {
     }
 }
 
+function redrawTetrominoPreviewNext() {
+    // cleanup
+    for (let row = 0; row < PREVEIW_ROWS; row++) {
+        for (let column = 0; column < PREVEIW_COLUMNS; column++) {
+            const cellIndex = convertPositionToIndexPreview(row, column)
+            cellsPreview[cellIndex].className = ''
+        }
+    }
+    // draw
+    let rowShift  = Math.floor((PREVEIW_ROWS - tetrominoNext.matrix.length) / 2)
+    let columnShift  = Math.floor((PREVEIW_COLUMNS - tetrominoNext.matrix[0].length) / 2)
+
+    for (let row = 0; row < tetrominoNext.matrix.length; row++) {
+        for (let column = 0; column < tetrominoNext.matrix[0].length; column++) {
+            const cellIndex = convertPositionToIndexPreview(row + rowShift, column + columnShift)
+            if (!tetrominoNext.matrix[row][column])
+                continue
+            cellsPreview[cellIndex].classList.add(tetrominoNext.name)
+        }
+    }
+}
+
 function drawScore() {
     document.getElementById("score").innerHTML = score
 }
@@ -143,13 +183,23 @@ function drawLevel() {
     document.getElementById("level").innerHTML = level
 }
 
-function drawGameOver() {
-    document.getElementById("gameover").style.visibility = "visible"
+function drawStartInfo() {
+    document.getElementById("infotext").innerHTML = "Press enter to start/pause"
+}
+
+function drawPauseInfo() {
+    document.getElementById("infotext").innerHTML = "Pause (Enter - resume/R - restart)"
+}
+
+function drawGameOverInfo() {
+    document.getElementById("infotext").innerHTML = "Game over! (Enter - restart)"
 }
 
 function draw() {
     drawScore()
+    drawLevel()
     drawTetromino()
+    redrawTetrominoPreviewNext()
     drawPlayfield()
 }
 
@@ -254,9 +304,28 @@ function redrawTetromino(tetroModifierFunc) {
 
 // setup event handling
 document.addEventListener("keydown", (event) => { 
-    if (isGameOver)
+    if (event.code == "Enter") {
+        if (isGameOver)  {
+            restart()
+            return
+        }
+        
+        isPause = !isPause
+        if (isPause) 
+            pause()
+        else 
+            resume()
+        
         return
-    
+    }
+
+    if (event.code == "KeyR" && isPause) {
+        restart()
+        return
+    }
+
+    if (isPause) return
+
     switch (event.code) {
         case "ArrowRight":
             redrawTetromino(moveRight)
@@ -273,9 +342,6 @@ document.addEventListener("keydown", (event) => {
         case "Space":
             redrawTetromino(roatate)
             break   
-        case "Enter":
-            pause = !pause
-            break  
     }
 })
 
@@ -407,56 +473,80 @@ function checkGameSpeed() {
         return
 
     level += 1
-    drawLevel()
 }
 
 // ----------------------------------------------------------------
 
 // init game
-
 function init() {
+    drawStartInfo()
     playfield = new Array(PLAYFIELD_ROWS).fill()    // matrix
         .map(() => new Array(PLAYFIELD_COLUMNS).fill(0))
     cells = generatePlayfieldElements() // html
+    cellsPreview = generatePreviewElements()
     tetromino = generateTetromino()
+    tetrominoNext = generateTetromino()
     draw()
+    setNextLoop()
 } 
 
-// loop running
-function startLoop() {
-    if (isGameOver)
-        return
+function restart() {
+    drawStartInfo()
+    isGameOver = false
+    isPause = false
+    level = 1
+    score = 0
+    playfield = new Array(PLAYFIELD_ROWS).fill()    // matrix
+        .map(() => new Array(PLAYFIELD_COLUMNS).fill(0))    
+    tetromino = generateTetromino()
+    tetrominoNext = generateTetromino()
+    draw()
+    setNextLoop()
+}
 
+function pause() {
+    drawPauseInfo()
+}
+
+function resume() {
+    drawStartInfo()
+    setNextLoop()
+}
+
+// running loop
+function setNextLoop() {
     setTimeout(() => requestAnimationFrame(executeLoop), Math.floor(initLoopIntervalMs / level))
 }
 
-function executeLoop() {
-    if (pause) {
-        startLoop()
+function executeLoop(cancelToken) {
+    if (isGameOver)
+        return
+
+    if (isPause) {
         return
     }
 
     redrawTetromino(moveDown)
 
     if (!isTetrominoStuck()){
-        startLoop()
+        setNextLoop(cancelToken)
         return
     }
     
     if (checkGameOver()) {
         isGameOver = true
-        drawGameOver()
+        drawGameOverInfo()
         return
     }
 
     checkFullRows()
     checkGameSpeed()
 
-    tetromino = generateTetromino()
+    tetromino = tetrominoNext
+    tetrominoNext = generateTetromino()
     redrawTetromino(moveDown)
     draw()
-    startLoop()
+    setNextLoop(cancelToken)
 }
 
 init()
-startLoop()
