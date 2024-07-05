@@ -464,6 +464,7 @@ document.addEventListener("keydown", (event) => {
     }
 
     if (event.code == "KeyR" && isPause) {
+        isPause = false
         start()
         return
     }
@@ -502,7 +503,6 @@ function start() {
 
     level = 1
     score = 0
-    isPause = false
     isGameOver = false
 
     playfield = new Array(PLAYFIELD_ROWS).fill()    // matrix
@@ -537,6 +537,7 @@ function executeLoop() {
         return
 
     moveTetromino(moveDown)
+    draw()
 
     if (!isTetrominoStuck()){
         setNextLoop()
@@ -546,7 +547,6 @@ function executeLoop() {
     if (checkGameOver()) {
         isGameOver = true
         drawGameOverInfo()
-        updateScore()
         return
     }
 
@@ -556,8 +556,6 @@ function executeLoop() {
     tetromino = tetrominoNext
     tetrominoNext = generateTetromino()
 
-    moveTetromino(moveDown)
-    draw()
     setNextLoop()
 }
 
